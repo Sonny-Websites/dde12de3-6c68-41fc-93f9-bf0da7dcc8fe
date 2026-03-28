@@ -1,181 +1,179 @@
-// Set dynamic copyright year
-document.addEventListener('DOMContentLoaded', function() {
-    const yearElement = document.getElementById('year');
-    if (yearElement) {
-        yearElement.textContent = new Date().getFullYear();
+document.addEventListener('DOMContentLoaded', () => {
+  const yearElement = document.getElementById('year');
+  if (yearElement) {
+    yearElement.textContent = String(new Date().getFullYear());
+  }
+
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const navMenu = document.getElementById('navMenu');
+
+  if (hamburgerMenu && navMenu) {
+    hamburgerMenu.addEventListener('click', () => {
+      const expanded = hamburgerMenu.getAttribute('aria-expanded') === 'true';
+      hamburgerMenu.setAttribute('aria-expanded', String(!expanded));
+      navMenu.classList.toggle('active');
+    });
+
+    navMenu.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        hamburgerMenu.setAttribute('aria-expanded', 'false');
+        navMenu.classList.remove('active');
+      });
+    });
+  }
+
+  const contactForm = document.getElementById('contactForm');
+  if (!contactForm) {
+    return;
+  }
+
+  const responseMessage = document.getElementById('responseMessage');
+  const submitBtn = document.getElementById('submitBtn');
+
+  const validators = {
+    name(value) {
+      if (!value || value.trim().length < 2) {
+        return 'Name must be at least 2 characters.';
+      }
+      return '';
+    },
+    email(value) {
+      if (!value || !isValidEmail(value.trim())) {
+        return 'Please enter a valid email address.';
+      }
+      return '';
+    },
+    phone(value) {
+      if (!value) {
+        return '';
+      }
+      if (!/^[0-9+()\-\s]{7,20}$/.test(value.trim())) {
+        return 'Please enter a valid phone number.';
+      }
+      return '';
+    },
+    message(value) {
+      if (!value || value.trim().length < 10) {
+        return 'Message must be at least 10 characters.';
+      }
+      return '';
+    }
+  };
+
+  const fieldIds = ['name', 'email', 'phone', 'message'];
+
+  function showFieldError(fieldId, error) {
+    const input = document.getElementById(fieldId);
+    const errorEl = document.getElementById(`${fieldId}Error`);
+    if (!input || !errorEl) return;
+
+    if (error) {
+      input.classList.add('error');
+      errorEl.textContent = error;
+    } else {
+      input.classList.remove('error');
+      errorEl.textContent = '';
+    }
+  }
+
+  function validateField(fieldId) {
+    const input = document.getElementById(fieldId);
+    if (!input) return true;
+    const error = validators[fieldId](input.value);
+    showFieldError(fieldId, error);
+    return !error;
+  }
+
+  function validateForm() {
+    return fieldIds.map(validateField).every(Boolean);
+  }
+
+  fieldIds.forEach((fieldId) => {
+    const input = document.getElementById(fieldId);
+    if (!input) return;
+
+    input.addEventListener('blur', () => {
+      validateField(fieldId);
+    });
+
+    input.addEventListener('input', () => {
+      if (input.classList.contains('error')) {
+        validateField(fieldId);
+      }
+      if (responseMessage) {
+        responseMessage.textContent = '';
+      }
+    });
+  });
+
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (responseMessage) {
+      responseMessage.textContent = '';
     }
 
-    // Mobile hamburger menu toggle
-    const hamburgerMenu = document.getElementById('hamburgerMenu');
-    const navMenu = document.getElementById('navMenu');
-
-    if (hamburgerMenu && navMenu) {
-        hamburgerMenu.addEventListener('click', function() {
-            hamburgerMenu.classList.toggle('active');
-            navMenu.classList.toggle('active');
-        });
-
-        // Close menu when a link is clicked
-        navMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', function() {
-                hamburgerMenu.classList.remove('active');
-                navMenu.classList.remove('active');
-            });
-        });
+    const honeypot = contactForm.querySelector('input[name="_hp"]');
+    if (honeypot && honeypot.value !== '') {
+      return;
     }
 
-    // Form validation and submission
-    const contactForm = document.getElementById('contactForm');
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Clear previous error messages
-            ['name', 'email', 'message'].forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                const errorSpan = document.getElementById(fieldId + 'Error');
-                if (field) {
-                    field.classList.remove('error');
-                    if (errorSpan) {
-                        errorSpan.textContent = '';
-                    }
-                }
-            });
-
-            // Validate form fields
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const message = document.getElementById('message').value.trim();
-            let isValid = true;
-
-            if (!name) {
-                document.getElementById('name').classList.add('error');
-                document.getElementById('nameError').textContent = 'Name is required';
-                isValid = false;
-            }
-
-            if (!email) {
-                document.getElementById('email').classList.add('error');
-                document.getElementById('emailError').textContent = 'Email is required';
-                isValid = false;
-            } else if (!isValidEmail(email)) {
-                document.getElementById('email').classList.add('error');
-                document.getElementById('emailError').textContent = 'Please enter a valid email address';
-                isValid = false;
-            }
-
-            if (!message) {
-                document.getElementById('message').classList.add('error');
-                document.getElementById('messageError').textContent = 'Message is required';
-                isValid = false;
-            } else if (message.length < 10) {
-                document.getElementById('message').classList.add('error');
-                document.getElementById('messageError').textContent = 'Message must be at least 10 characters long';
-                isValid = false;
-            }
-
-            if (!isValid) {
-                return;
-            }
-
-            // Honeypot check
-            if (document.querySelector('input[name="_hp"]').value !== '') {
-                return;
-            }
-
-            // Show loading state
-            const submitBtn = document.getElementById('submitBtn');
-            const originalText = submitBtn.textContent;
-            submitBtn.setAttribute('aria-busy', 'true');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Sending...';
-
-            // Prepare form data
-            const formData = new FormData(this);
-            const data = new URLSearchParams();
-            for (let [key, value] of formData) {
-                data.append(key, value);
-            }
-
-            // Submit form (use current origin for static deploy)
-            const thankYouUrl = new URL('/thank-you/', window.location.origin).pathname;
-            fetch('/__forms/contact', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: data
-            })
-            .then(response => response.json())
-            .then(result => {
-                window.location.href = thankYouUrl;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                submitBtn.setAttribute('aria-busy', 'false');
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                document.getElementById('responseMessage').innerHTML = '<p style="color: #e74c3c;">Sorry, there was an error sending your message. Please try again.</p>';
-            });
-        });
+    const isValid = validateForm();
+    if (!isValid) {
+      return;
     }
 
-    // Newsletter form submission
-    const newsletterForm = document.getElementById('newsletterForm');
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const emailInput = this.querySelector('input[type="email"]');
-            const email = emailInput.value.trim();
-
-            if (!email || !isValidEmail(email)) {
-                alert('Please enter a valid email address');
-                return;
-            }
-
-            // Show success message
-            const button = this.querySelector('button');
-            const originalText = button.textContent;
-            button.textContent = 'Subscribed!';
-            button.disabled = true;
-
-            // Reset after 2 seconds
-            setTimeout(() => {
-                emailInput.value = '';
-                button.textContent = originalText;
-                button.disabled = false;
-            }, 2000);
-        });
+    if (!submitBtn) {
+      return;
     }
+
+    const originalText = submitBtn.textContent;
+    submitBtn.setAttribute('aria-busy', 'true');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    const formData = new FormData(contactForm);
+    const data = new URLSearchParams();
+    for (const [key, value] of formData) {
+      data.append(key, String(value));
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      const response = await fetch('/__forms/contact', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: data,
+        signal: controller.signal
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const basePath = document.querySelector('meta[name="astro-base"]')?.getAttribute('content') || '/';
+      const thankYouPath = `${basePath.replace(/\/$/, '')}/thank-you/`;
+      window.location.href = thankYouPath;
+    } catch (error) {
+      console.error('Form submission failed:', error);
+      submitBtn.setAttribute('aria-busy', 'false');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      if (responseMessage) {
+        responseMessage.textContent = 'Server error. Please try again.';
+      }
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  });
 });
 
-// Helper function to validate email
 function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
-
-// Scroll animation observer
-function animateOnScroll() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
-    };
-
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate');
-            }
-        });
-    }, observerOptions);
-
-    document.querySelectorAll('[data-animate]').forEach(element => {
-        observer.observe(element);
-    });
-}
-
-// Call scroll animation on page load
-document.addEventListener('DOMContentLoaded', animateOnScroll);
