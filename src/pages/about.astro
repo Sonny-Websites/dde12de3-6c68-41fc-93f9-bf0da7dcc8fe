@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+---
+
+<BaseLayout
+  title="About Us"
+  description="Learn more about our company, mission, and team. We are dedicated to providing excellent services and customer satisfaction."
+  ogTitle="About Our Company"
+  ogDescription="Learn more about our company, mission, and values."
+>
+  <Header current="about" />
+  <section class="about" role="main" aria-labelledby="aboutHeading">
+    <h1 id="aboutHeading">About Us</h1>
+    <div class="about-content">
+      <div class="about-image">
+        <img src="https://via.placeholder.com/400x300" alt="Company team working together" loading="lazy" />
+      </div>
+      <div class="about-text">
+        <p>We are a company dedicated to providing excellent services. Our team is passionate about innovation and customer satisfaction.</p>
+        <p>Learn more about our mission and values. With over a decade of experience in our industry, we have built a reputation for delivering exceptional quality and exceeding customer expectations.</p>
+        <a href={`${base}/#contact`} class="btn btn-primary" style="display: inline-block; margin-top: 2rem;">Get in Touch</a>
+      </div>
+    </div>
+  </section>
+  <Footer />
+</BaseLayout>

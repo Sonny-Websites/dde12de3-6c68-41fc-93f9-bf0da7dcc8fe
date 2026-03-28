@@ -1,0 +1,46 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  canonical?: string;
+  jsonLd?: object;
+}
+
+const { title, description, ogTitle, ogDescription, canonical, jsonLd } = Astro.props;
+const sitemapHref = Astro.site
+  ? new URL(
+      'sitemap-index.xml',
+      Astro.site.href.endsWith('/') ? Astro.site.href : `${Astro.site.href}/`
+    ).href
+  : undefined;
+const siteTitle = title.includes(' - ') ? title : `${title} - My Site`;
+const metaDescription = description ?? 'Our landing page offers top-notch services and solutions for your business needs.';
+const metaOgTitle = ogTitle ?? title;
+const metaOgDescription = ogDescription ?? metaDescription;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={metaDescription} />
+    <meta property="og:title" content={metaOgTitle} />
+    <meta property="og:description" content={metaOgDescription} />
+    <meta property="og:type" content="website" />
+    {sitemapHref && <link rel="sitemap" href={sitemapHref} />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    <title>{siteTitle}</title>
+    {jsonLd && (
+      <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    )}
+  </head>
+  <body>
+    <slot />
+    <script is:inline src="/site.js"></script>
+  </body>
+</html>
